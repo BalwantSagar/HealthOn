@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal BMI Tracker</title>
+    <style>
+        /* Basic Reset */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f4f7f6; /* Light background */
+            color: #333;
+            line-height: 1.6;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: #007bff; /* Primary color for header */
+            color: white;
+            padding: 15px 10px;
+            width: 100%;
+            text-align: center;
+            position: fixed; /* Keeps header visible on scroll */
+            top: 0;
+            left: 0;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        main {
+            width: 100%;
+            max-width: 400px; /* Mobile-first container size */
+            margin-top: 80px; /* Space below fixed header */
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        h1, h2 {
+            color: #007bff;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        /* Input Styles */
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        /* Button Styles */
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #28a745; /* Success/Action color */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        #resetBtn {
+            background-color: #6c757d; /* Secondary/Reset color */
+            margin-top: 10px;
+        }
+
+        #resetBtn:hover {
+            background-color: #5a6268;
+        }
+
+        /* Result and Advice Styles */
+        #resultSection p {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .advice-box {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            border-left: 5px solid #007bff;
+        }
+
+        .advice-box h3 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        
+        .advice-box h4 {
+            margin-top: 10px;
+            margin-bottom: 5px;
+            color: #343a40;
+        }
+
+        .advice-box ul {
+            list-style: disc;
+            margin-left: 20px;
+            padding-left: 0;
+            font-size: 14px;
+        }
+        
+        .advice-box li {
+            margin-bottom: 5px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Color coding for BMI categories */
+        .underweight { border-left-color: #ffc107; } /* Yellow */
+        .normal { border-left-color: #28a745; } /* Green */
+        .overweight { border-left-color: #ffc107; } /* Yellow */
+        .obese { border-left-color: #dc3545; } /* Red */
+    </style>
+</head>
+<body>
+    <header>
+        <h1>BMI Health Tracker</h1>
+        <!-- Sign-in/Profile section placeholder - Requires a backend -->
+        <!-- <button id="signInBtn">Sign In / Profile</button> -->
+    </header>
+    
+    <main>
+        <section id="inputSection">
+            <h2>Calculate Your BMI</h2>
+            <div class="input-group">
+                <label for="weight">Weight (kg):</label>
+                <input type="number" id="weight" placeholder="e.g., 70" required>
+            </div>
+            <div class="input-group">
+                <label for="height">Height (cm):</label>
+                <input type="number" id="height" placeholder="e.g., 175" required>
+            </div>
+            <button id="calculateBtn">Calculate BMI</button>
+        </section>
+
+        <section id="resultSection" class="hidden">
+            <h2>Your BMI Result</h2>
+            <p>Your calculated BMI is: <strong id="bmiResult"></strong></p>
+            <p>Category: <strong id="bmiCategory"></strong></p>
+            
+            <div id="advice" class="advice-box">
+                <!-- Advice will be injected here -->
+            </div>
+            <button id="resetBtn">Recalculate</button>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const calculateBtn = document.getElementById('calculateBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const inputSection = document.getElementById('inputSection');
+            const resultSection = document.getElementById('resultSection');
+            const bmiResult = document.getElementById('bmiResult');
+            const bmiCategory = document.getElementById('bmiCategory');
+            const adviceDiv = document.getElementById('advice');
+
+            calculateBtn.addEventListener('click', calculateBMI);
+            resetBtn.addEventListener('click', resetCalculator);
+
+            function calculateBMI() {
+                const weight = parseFloat(document.getElementById('weight').value);
+                const heightCm = parseFloat(document.getElementById('height').value);
+
+                if (weight <= 0 || heightCm <= 0 || isNaN(weight) || isNaN(heightCm)) {
+                    // Use a custom message display instead of alert()
+                    alert("Please enter valid positive values for weight and height."); 
+                    return;
+                }
+
+                // Convert height from cm to meters
+                const heightM = heightCm / 100;
+                
+                // BMI Formula: weight (kg) / [height (m)]^2
+                const bmi = weight / (heightM * heightM);
+                const roundedBmi = bmi.toFixed(1);
+
+                // Determine Category and Advice
+                let category = '';
+                let adviceHtml = '';
+                let adviceClass = '';
+
+                if (bmi < 18.5) {
+                    category = 'Underweight';
+                    adviceClass = 'underweight';
+                    adviceHtml = getAdvice('Underweight', roundedBmi);
+                } else if (bmi >= 18.5 && bmi <= 24.9) {
+                    category = 'Normal Weight';
+                    adviceClass = 'normal';
+                    adviceHtml = getAdvice('Normal Weight', roundedBmi);
+                } else if (bmi >= 25.0 && bmi <= 29.9) {
+                    category = 'Overweight';
+                    adviceClass = 'overweight';
+                    adviceHtml = getAdvice('Overweight', roundedBmi);
+                } else { // bmi >= 30.0
+                    category = 'Obese';
+                    adviceClass = 'obese';
+                    adviceHtml = getAdvice('Obese', roundedBmi);
+                }
+                
+                // Update UI
+                bmiResult.textContent = roundedBmi;
+                bmiCategory.textContent = category;
+                adviceDiv.innerHTML = adviceHtml;
+                adviceDiv.className = `advice-box ${adviceClass}`; // Apply category-based color
+                
+                inputSection.classList.add('hidden');
+                resultSection.classList.remove('hidden');
+            }
+
+            function getAdvice(category, bmi) {
+                let title = `<h3>Action Plan: ${category}</h3>`;
+                let diet = '';
+                let exercise = '';
+                let general = '';
+
+                if (category === 'Underweight') {
+                    diet = `
+                        <h4>🍎 Diet Plan (Aim to Gain)</h4>
+                        <ul>
+                            <li>**Focus on Nutrient-Dense Foods:** Include healthy fats (nuts, avocados), whole grains, and lean proteins (chicken, fish, beans).</li>
+                            <li>**Eat More Often:** Try 5-6 smaller, balanced meals and healthy snacks throughout the day.</li>
+                            <li>**Healthy Smoothies:** Use milk, yogurt, and fruit in smoothies to easily increase calorie intake.</li>
+                        </ul>`;
+                    exercise = `
+                        <h4>🏋️ Exercise Plan (Focus on Muscle)</h4>
+                        <ul>
+                            <li>**Resistance Training:** 3-4 times a week (lifting weights, bodyweight exercises) to gain healthy muscle mass.</li>
+                            <li>**Limit Excessive Cardio:** Too much running/cardio can burn necessary calories. Focus on short, moderate sessions.</li>
+                            <li>**Prioritize Recovery:** Ensure adequate sleep and rest days for muscle growth.</li>
+                        </ul>`;
+                } else if (category === 'Normal Weight') {
+                    diet = `
+                        <h4>✅ Your Diet Plan (Maintain)</h4>
+                        <ul>
+                            <li>**Balanced Eating:** Continue a diet rich in fruits, vegetables, lean proteins, and whole grains.</li>
+                            <li>**Hydration:** Drink plenty of water (around 8 glasses) daily.</li>
+                            <li>**Mindful Eating:** Pay attention to hunger cues and avoid unnecessary snacking.</li>
+                        </ul>`;
+                    exercise = `
+                        <h4>🏃 Your Exercise Plan (Maintain)</h4>
+                        <ul>
+                            <li>**Mix it Up:** Aim for at least 150 minutes of moderate aerobic activity (walking, swimming) and two days of muscle-strengthening activity per week.</li>
+                            <li>**Stay Active:** Find activities you enjoy to ensure long-term consistency.</li>
+                            <li>**Flexibility:** Include stretching or yoga a few times a week for mobility.</li>
+                        </ul>`;
+                } else { // Overweight or Obese (Aim to Lose)
+                    diet = `
+                        <h4>📉 Diet Plan (Aim to Lose)</h4>
+                        <ul>
+                            <li>**Portion Control:** Use smaller plates and measure servings, especially for high-calorie foods.</li>
+                            <li>**Reduce Sugar & Processed Foods:** Swap sugary drinks for water and minimize fast food/pre-packaged snacks.</li>
+                            <li>**Increase Fiber:** Eat more vegetables, fruits, and legumes to feel fuller longer.</li>
+                        </ul>`;
+                    exercise = `
+                        <h4>🚶 Exercise Plan (Focus on Activity)</h4>
+                        <ul>
+                            <li>**Start Slow:** Begin with a 30-minute brisk walk daily. Gradually increase the intensity or duration.</li>
+                            <li>**Find Joyful Movement:** Choose activities like dancing, cycling, or team sports that you look forward to.</li>
+                            <li>**Consistency is Key:** Aim for movement most days of the week, even if it's in short bursts.</li>
+                        </ul>`;
+                }
+                
+                general = `
+                    <p>***Disclaimer:** This is a basic guide. Always consult with a healthcare professional or a registered dietitian for a plan specific to your unique health needs.*</p>
+                `;
+
+                return title + diet + exercise + general;
+            }
+
+            function resetCalculator() {
+                // Clear inputs and switch views
+                document.getElementById('weight').value = '';
+                document.getElementById('height').value = '';
+                inputSection.classList.remove('hidden');
+                resultSection.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
