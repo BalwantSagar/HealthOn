@@ -3,348 +3,627 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BMI Health Tracker</title>
+    <title>Beyond the BMI and your health tracker</title>
+    
+    <!-- 1. Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. Load Google Font (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- 3. Configure Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                },
+            },
+        };
+    </script>
     <style>
-        /* Basic Reset & Font */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
+        /* Custom scrollbar for history */
+        .history-list::-webkit-scrollbar {
+            width: 6px;
         }
-
-        body {
-            background-color: #f4f7f6; /* Light background */
-            color: #333;
-            line-height: 1.6;
+        .history-list::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
         }
-
-        header {
-            background-color: #007bff; /* Primary color */
-            color: white;
-            padding: 15px 5%; /* Use % for responsiveness */
-            text-align: center;
-            width: 100%;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        .history-list::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 10px;
         }
-
-        header h1 {
-            font-size: 1.75rem;
+        .history-list::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
         }
-
-        /* * NEW LAYOUT: Flexbox Container
-         * This will be our main 2-column container 
-         */
-        .main-container {
-            display: flex;
-            flex-wrap: wrap; /* Allows columns to stack on mobile */
-            padding: 20px 5%;
-            max-width: 1400px;
-            margin: 20px auto;
-            gap: 20px; /* Space between columns */
-        }
-
-        /* * NEW: Left Column (Calculator & Results)
-         * flex: 2; makes it take up 2/3 of the space 
-         */
-        .left-column {
-            flex: 2; /* Takes 2 "shares" of space */
-            min-width: 300px; /* Ensures it doesn't get too small */
-            display: flex;
-            flex-direction: column;
-            gap: 20px; /* Space between calculator and result */
-        }
-
-        /* * NEW: Right Column (Info & Table)
-         * flex: 1; makes it take up 1/3 of the space
-         */
-        .right-column {
-            flex: 1; /* Takes 1 "share" of space */
-            min-width: 300px; /* Ensures it doesn't get too small */
-            display: flex;
-            flex-direction: column;
-            gap: 20px; /* Space between info boxes */
-        }
-        
-        /* * Card Style (for all sections)
-         * We'll make all sections look like "cards"
-         */
-        .card {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-        }
-
-        .card h2 {
-            color: #007bff;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        /* Input Styles */
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        input[type="number"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-
-        /* Button Styles */
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #28a745; /* Green */
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #218838;
-        }
-        #resetBtn {
-            background-color: #6c757d; /* Gray */
-            margin-top: 10px;
-        }
-        #resetBtn:hover {
-            background-color: #5a6268;
-        }
-
-        /* Result Section (The "pop-up", now a card) */
-        #resultSection p {
-            margin-bottom: 10px;
-            text-align: center;
-        }
-        .advice-box {
-            background-color: #e9ecef;
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 15px;
-        }
-        .advice-box h3 {
-            margin-top: 0;
-            color: #007bff;
-        }
-
-        /* NEW: BMI Table */
-        .bmi-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        .bmi-table th, .bmi-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        .bmi-table th {
-            background-color: #f2f2f2;
-        }
-
-        /* NEW: Profile Section Placeholder */
-        #profileSection {
-            background-color: #e9ecef;
-            border: 2px dashed #007bff;
-            text-align: center;
-            padding: 30px 20px;
-        }
-
-        /* Utility Class */
-        .hidden {
-            display: none;
+        /* Ensure the User ID can wrap if needed */
+        #auth-status {
+            word-break: break-all;
         }
     </style>
 </head>
-<body>
+<body class="bg-gray-100 font-inter text-gray-800">
 
-    <header>
-        <h1>BMI Health Tracker</h1>
-    </header>
-    
-    <main class="main-container">
+    <!-- App Container -->
+    <div id="app" class="min-h-screen p-4 md:p-8">
 
-        <div class="left-column">
+        <!-- Header: Title and Auth Section -->
+        <header class="max-w-7xl mx-auto mb-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <!-- Title -->
+            <h1 class="text-3xl md:text-4xl font-bold text-indigo-600 text-center sm:text-left">
+                Beyond the BMI
+                <span class="block text-xl md:text-2xl font-medium text-gray-600">and your health tracker</span>
+            </h1>
             
-            <section id="inputSection" class="card">
-                <h2>Calculate Your BMI</h2>
-                <div class="input-group">
-                    <label for="weight">Weight (kg):</label>
-                    <input type="number" id="weight" placeholder="e.g., 70" required>
-                </div>
-                <div class="input-group">
-                    <label for="height">Height (cm):</label>
-                    <input type="number" id="height" placeholder="e.g., 175" required>
-                </div>
-                <button id="calculateBtn">Calculate BMI</button>
-            </section>
+            <!-- Auth Container -->
+            <div id="auth-container" class="bg-white p-3 rounded-lg shadow-sm flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                <span id="auth-status" class="text-xs text-gray-600 text-center sm:text-left">Loading...</span>
+                <button id="auth-btn" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-indigo-700 transition-colors disabled:bg-gray-400 w-full sm:w-auto">
+                    Sign In
+                </button>
+            </div>
+        </header>
 
-            <section id="resultSection" class="card hidden">
-                <h2>Your BMI Result</h2>
-                <p>Your calculated BMI is: <strong id="bmiResult"></strong></p>
-                <p>Category: <strong id="bmiCategory"></strong></p>
-                
-                <div id="advice" class="advice-box">
+        <!-- Main Content: Grid Layout -->
+        <main class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+
+            <!-- Left/Main Column (Calculator, Results, History) -->
+            <div class="md:col-span-2 flex flex-col gap-6">
+
+                <!-- 1. Calculator Card -->
+                <section id="inputSection" class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
+                    <h2 class="text-2xl font-semibold text-gray-900 mb-6">Calculate Your BMI</h2>
+                    <div class="space-y-4">
+                        <div class="input-group">
+                            <label for="weight" class="block text-sm font-medium text-gray-700 mb-1">Weight (kg)</label>
+                            <input type="number" id="weight" placeholder="e.g., 70" required class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div class="input-group">
+                            <label for="height" class="block text-sm font-medium text-gray-700 mb-1">Height (cm)</label>
+                            <input type="number" id="height" placeholder="e.g., 175" required class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div class="flex gap-4">
+                             <button id="calculateBtn" class="w-full px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition-colors">
+                                Calculate BMI
+                            </button>
+                            <button id="resetBtn" class="w-1/3 px-6 py-3 bg-gray-600 text-white font-semibold rounded-lg shadow-md hover:bg-gray-700 transition-colors">
+                                Reset
+                            </button>
+                        </div>
+                       
+                        <div id="error-message" class="text-red-600 text-sm hidden"></div>
                     </div>
-                <button id="resetBtn">Recalculate</button>
-            </section>
+                </section>
 
-        </div>
+                <!-- 2. Result Card (Initially Hidden) -->
+                <section id="resultSection" class="bg-white p-6 md:p-8 rounded-xl shadow-lg hidden">
+                    <div class="text-center mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-900 mb-4">Your Result</h2>
+                        <div class="inline-block bg-indigo-50 p-6 rounded-lg">
+                            <p class="text-lg text-gray-600">Your calculated BMI is:</p>
+                            <strong id="bmiResult" class="text-6xl font-bold text-indigo-600">0.0</strong>
+                            <p class="mt-2 text-2xl font-medium" id="bmiCategory"></p>
+                        </div>
+                    </div>
+                    
+                    <!-- Redesigned Advice Box -->
+                    <div id="advice" class="advice-box space-y-4">
+                        <!-- Advice will be injected here by getAdvice() -->
+                    </div>
+                </section>
+                
+                <!-- 3. History Card (Initially Hidden) -->
+                <section id="historySection" class="bg-white p-6 md:p-8 rounded-xl shadow-lg hidden">
+                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Your BMI History</h2>
+                    <p class="text-sm text-gray-600 mb-4">Your calculations are saved automatically to your profile.</p>
+                    <div id="history-list-container" class="history-list h-64 overflow-y-auto bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <p id="history-placeholder" class="text-gray-500">No history found.</p>
+                        <ul id="history-list" class="space-y-3">
+                            <!-- History items will be injected here -->
+                        </ul>
+                    </div>
+                </section>
+            </div>
 
-        <div class="right-column">
+            <!-- Right/Sidebar Column (Intro, Table, & Motivation) -->
+            <div class="md:col-span-1 flex flex-col gap-6">
 
-            <section id="introSection" class="card">
-                <h2>What is BMI?</h2>
-                <p>
-                    Body Mass Index (BMI) is a simple value calculated from a person's weight and height. It is used as a common indicator of whether a person has a healthy body weight for their height.
-                </p>
-                <p style="margin-top:10px;">
-                    While BMI is a useful screening tool, it does not measure body fat directly and doesn't account for muscle mass, bone density, or fat distribution.
-                </p>
-            </section>
-            
-            <section id="tableSection" class="card">
-                <h2>BMI Categories (WHO)</h2>
-                <table class="bmi-table">
-                    <thead>
-                        <tr>
-                            <th>Category</th>
-                            <th>BMI Range (kg/m²)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Underweight</td>
-                            <td>Below 18.5</td>
-                        </tr>
-                        <tr>
-                            <td>Normal</td>
-                            <td>18.5 – 24.9</td>
-                        </tr>
-                        <tr>
-                            <td>Overweight</td>
-                            <td>25.0 – 29.9</td>
-                        </tr>
-                        <tr>
-                            <td>Obese</td>
-                            <td>30.0 and Above</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </section>
+                <!-- 4. What is BMI? Card -->
+                <aside class="bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3">What is BMI?</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">
+                        Body mass index (BMI) is a measure of body fat based on height and weight that applies to adult men and women. Your BMI is just one piece of the puzzle. It’s based on height and weight but doesn’t take into account your muscle mass, bone density, or body composition. Your healthcare provider will consider whether your BMI is too high or too low for you.
+                    </p>
+                </aside>
+                
+                <!-- 5. NEW: Healthy Weight Range Card -->
+                <aside class="bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Are you within a healthy weight range for your height?</h3>
+                    <div class="text-gray-600 text-sm leading-relaxed space-y-3">
+                        <p>
+                            Body mass index, or BMI, gives an indication of your body size.
+                        </p>
+                        <p>
+                            BMI is calculated using your weight and height (your weight divided by your height squared). Along with several other factors, like your blood pressure and cholesterol, BMI can help estimate your risk of a heart attack or stroke.
+                        </p>
+                        <p>
+                            BMI has several limitations though and isn’t accurate in some people. Your GP and an Accredited Practising Dietitian can help you to achieve and maintain a healthy weight.
+                        </p>
+                    </div>
+                </aside>
+                
+                <!-- 6. NEW: Limitations Card -->
+                <aside class="bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Limitations of measuring body mass index</h3>
+                    <div class="text-gray-600 text-sm leading-relaxed space-y-3">
+                        <p>
+                            It’s important to remember that BMI is not the most reliable measure of whether your weight is in a healthy range for your height. It’s not a good overall indicator of how healthy you are, and doesn’t take into account important factors like age, gender and body composition (fat, muscle and bone).
+                        </p>
+                        <p>
+                            For the following groups of people, BMI is not an accurate measure:
+                        </p>
+                        <ul class="list-disc list-outside pl-5 space-y-1">
+                            <li>Some ethnic groups including Aboriginal and/or Torres Strait Islander Peoples, and people of Asian/South Asian descent.</li>
+                            <li>Women who are pregnant.</li>
+                            <li>People 19 years of age or younger.</li>
+                            <li>Athletes or people who have a lot of muscle.</li>
+                            <li>People with a condition that affects the amount of fluid in their body (for example, heart failure).</li>
+                        </ul>
+                    </div>
+                </aside>
 
-            <section id="profileSection" class="card">
-                <h2>Your Profile</h2>
-                <p>Sign-in feature coming soon!</p>
-                <p style="font-size: 0.9rem; margin-top: 10px;">
-                    This is where you'll be able to sign in and track your BMI history over time.
-                </p>
-            </section>
+                <!-- 7. BMI Categories Table Card -->
+                <aside class="bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">BMI Categories</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left table-auto">
+                            <thead class="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th class="px-4 py-3 text-sm font-medium text-gray-600">Category</th>
+                                    <th class="px-4 py-3 text-sm font-medium text-gray-600">BMI Range</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-4 py-3 font-medium text-blue-600">Underweight</td>
+                                    <td class="px-4 py-3 text-gray-700">Below 18.5</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-medium text-green-600">Normal Weight</td>
+                                    <td class="px-4 py-3 text-gray-700">18.5 – 24.9</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-medium text-yellow-600">Overweight</td>
+                                    <td class="px-4 py-3 text-gray-700">25.0 – 29.9</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-medium text-red-600">Obese</td>
+                                    <td class="px-4 py-3 text-gray-700">30.0 and Above</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </aside>
 
-        </div>
-    </main>
+                <!-- 8. Daily Motivation Card -->
+                <aside class="bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Daily Motivation</h3>
+                    <div class="space-y-4">
+                        <!-- Coach 1 -->
+                        <div class="flex items-center gap-4">
+                            <img src="https://placehold.co/80x80/6366F1/FFFFFF?text=Coach+Kenji" alt="Anime Coach Kenji" class="w-20 h-20 rounded-full border-4 border-indigo-200 object-cover">
+                            <div>
+                                <h4 class="font-semibold text-indigo-600">Coach Kenji</h4>
+                                <p class="text-sm text-gray-600 italic">"The journey of a thousand miles begins with a single step. Take yours today!"</p>
+                            </div>
+                        </div>
+                        <!-- Coach 2 -->
+                        <div class="flex items-center gap-4">
+                            <img src="https://placehold.co/80x80/10B981/FFFFFF?text=Coach+Aya" alt="Anime Coach Aya" class="w-20 h-20 rounded-full border-4 border-green-200 object-cover">
+                            <div>
+                                <h4 class="font-semibold text-green-600">Coach Aya</h4>
+                                <p class="text-sm text-gray-600 italic">"Consistency is more important than perfection. Don't give up!"</p>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </main>
+    </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const calculateBtn = document.getElementById('calculateBtn');
-            const resetBtn = document.getElementById('resetBtn');
-            
-            // We no longer hide the input section, just the result section
-            const resultSection = document.getElementById('resultSection');
-            
-            const bmiResult = document.getElementById('bmiResult');
-            const bmiCategory = document.getElementById('bmiCategory');
-            const adviceDiv = document.getElementById('advice');
+    <!-- 5. Load Firebase SDKs -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            signInAnonymously, 
+            signInWithCustomToken, 
+            onAuthStateChanged,
+            signOut
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            addDoc, 
+            collection, 
+            onSnapshot, 
+            query,
+            Timestamp,
+            setLogLevel
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-            calculateBtn.addEventListener('click', calculateBMI);
-            resetBtn.addEventListener('click', resetCalculator);
+        // --- GLOBAL VARIABLES ---
+        let auth, db, userId, isAuthReady = false;
+        let unsubscribeHistory = null; // To stop listener on sign-out
 
-            function calculateBMI() {
-                const weight = parseFloat(document.getElementById('weight').value);
-                const heightCm = parseFloat(document.getElementById('height').value);
+        // --- DOM ELEMENTS ---
+        const calculateBtn = document.getElementById('calculateBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const resultSection = document.getElementById('resultSection');
+        const historySection = document.getElementById('historySection');
+        const bmiResult = document.getElementById('bmiResult');
+        const bmiCategory = document.getElementById('bmiCategory');
+        const adviceDiv = document.getElementById('advice');
+        const weightInput = document.getElementById('weight');
+        const heightInput = document.getElementById('height');
+        const errorMessage = document.getElementById('error-message');
+        const authStatus = document.getElementById('auth-status');
+        const authBtn = document.getElementById('auth-btn');
+        const historyList = document.getElementById('history-list');
+        const historyPlaceholder = document.getElementById('history-placeholder');
 
-                if (weight <= 0 || heightCm <= 0 || isNaN(weight) || isNaN(heightCm)) {
-                    alert("Please enter valid positive values for weight and height.");
-                    return;
-                }
+        // --- FIREBASE CONFIG & INITIALIZATION ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        try {
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            setLogLevel('Debug');
+            console.log("Firebase Initialized Successfully.");
+            handleAuthentication();
+        } catch (e) {
+            console.error("Error initializing Firebase:", e);
+            authStatus.textContent = "Error initializing.";
+            authBtn.disabled = true;
+        }
 
-                const heightM = heightCm / 100;
-                const bmi = weight / (heightM * heightM);
-                const roundedBmi = bmi.toFixed(1);
-
-                let category = '';
-                let adviceHtml = '';
-
-                if (bmi < 18.5) {
-                    category = 'Underweight';
-                } else if (bmi >= 18.5 && bmi <= 24.9) {
-                    category = 'Normal Weight';
-                } else if (bmi >= 25.0 && bmi <= 29.9) {
-                    category = 'Overweight';
+        // --- AUTHENTICATION LOGIC ---
+        function handleAuthentication() {
+            onAuthStateChanged(auth, user => {
+                isAuthReady = true;
+                if (user) {
+                    // User is signed in
+                    userId = user.uid;
+                    authStatus.textContent = `User ID: ${userId}`;
+                    authBtn.textContent = "Sign Out";
+                    authBtn.onclick = signOutUser;
+                    authBtn.disabled = false;
+                    historySection.classList.remove('hidden');
+                    setupHistoryListener(userId); // Start listening for data
                 } else {
-                    category = 'Obese';
+                    // User is signed out
+                    userId = null;
+                    authStatus.textContent = "Sign in to create your profile & track history.";
+                    authBtn.textContent = "Sign In (Easy Profile)";
+                    authBtn.onclick = signIn;
+                    authBtn.disabled = false;
+                    historySection.classList.add('hidden');
+                    if (unsubscribeHistory) {
+                        unsubscribeHistory(); // Stop listening
+                    }
+                    renderHistory([]); // Clear history list
                 }
-                
-                adviceHtml = getAdvice(category, roundedBmi);
-
-                // Update UI
-                bmiResult.textContent = roundedBmi;
-                bmiCategory.textContent = category;
-                adviceDiv.innerHTML = adviceHtml;
-                
-                // *** LOGIC CHANGE ***
-                // Instead of hiding the input, we just show the result.
-                resultSection.classList.remove('hidden');
-            }
-
-            function getAdvice(category, bmi) {
-                // (This function is the same as before)
-                let title = `<h3>Action Plan: ${category}</h3>`;
-                let diet = '';
-                let exercise = '';
-                let general = '';
-
-                if (category === 'Underweight') {
-                    diet = `<h4>🍎 Diet Plan (Aim to Gain)</h4><ul>...</ul>`; // (Added '...' for brevity)
-                    exercise = `<h4>🏋️ Exercise Plan (Focus on Muscle)</h4><ul>...</ul>`;
-                } else if (category === 'Normal Weight') {
-                    diet = `<h4>✅ Your Diet Plan (Maintain)</h4><ul>...</ul>`;
-                    exercise = `<h4>🏃 Your Exercise Plan (Maintain)</h4><ul>...</ul>`;
-                } else { 
-                    diet = `<h4>📉 Diet Plan (Aim to Lose)</h4><ul>...</ul>`;
-                    exercise = `<h4>🚶 Exercise Plan (Focus on Activity)</h4><ul>...</ul>`;
+            });
+        }
+        
+        async function signIn() {
+            authBtn.disabled = true;
+            authStatus.textContent = "Creating profile...";
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
                 }
+            } catch (error) {
+                console.error("Authentication Error:", error);
+                authStatus.textContent = "Sign-in failed.";
+                authBtn.disabled = false;
+            }
+        }
+
+        async function signOutUser() {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error("Sign Out Error:", error);
+            }
+        }
+
+        // --- FIRESTORE DATABASE LOGIC ---
+        
+        function setupHistoryListener(currentUserId) {
+            if (!db || !currentUserId || !isAuthReady) {
+                console.log("Firestore or user not ready for listener.");
+                return;
+            }
+            if (unsubscribeHistory) unsubscribeHistory(); 
+            
+            const collectionPath = `artifacts/${appId}/users/${currentUserId}/bmiEntries`;
+            const q = query(collection(db, collectionPath));
+            
+            unsubscribeHistory = onSnapshot(q, (querySnapshot) => {
+                const entries = [];
+                querySnapshot.forEach((doc) => {
+                    entries.push({ id: doc.id, ...doc.data() });
+                });
                 
-                general = `<p>***Disclaimer:** Always consult with a healthcare professional...*</p>`;
+                entries.sort((a, b) => {
+                    const dateA = a.date?.toMillis ? a.date.toMillis() : new Date(a.date).getTime();
+                    const dateB = b.date?.toMillis ? b.date.toMillis() : new Date(b.date).getTime();
+                    return dateB - dateA;
+                });
                 
-                // Note: I've shortened the advice text here, but the full logic from
-                // our previous code should be pasted back in.
-                return title + " (Full diet and exercise advice will appear here)";
+                renderHistory(entries);
+            }, (error) => {
+                console.error("Error listening to history:", error);
+            });
+        }
+
+        function renderHistory(entries) {
+            historyList.innerHTML = ''; // Clear existing list
+            
+            if (entries.length === 0) {
+                historyPlaceholder.classList.remove('hidden');
+            } else {
+                historyPlaceholder.classList.add('hidden');
+                entries.forEach(entry => {
+                    const li = document.createElement('li');
+                    li.className = 'flex justify-between items-center bg-white p-3 rounded-md border border-gray-200';
+                    
+                    const date = entry.date?.toDate ? entry.date.toDate() : new Date(entry.date);
+                    const formattedDate = date.toLocaleDateString(undefined, {
+                        year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+                    });
+                    
+                    li.innerHTML = `
+                        <div>
+                            <span class="font-bold text-lg text-indigo-600">${entry.bmi.toFixed(1)}</span>
+                            <span class="text-gray-600 ml-2">(${entry.category})</span>
+                        </div>
+                        <span class="text-sm text-gray-500">${formattedDate}</span>
+                    `;
+                    historyList.appendChild(li);
+                });
+            }
+        }
+
+        async function saveBmiEntry(bmiData) {
+            if (!db || !userId || !isAuthReady) {
+                console.log("User not signed in. BMI entry not saved.");
+                return; 
+            }
+            
+            try {
+                const collectionPath = `artifacts/${appId}/users/${userId}/bmiEntries`;
+                await addDoc(collection(db, collectionPath), {
+                    ...bmiData,
+                    date: Timestamp.fromDate(new Date(bmiData.date)) // Use Firestore Timestamp
+                });
+                console.log("BMI Entry saved successfully.");
+            } catch (error) {
+                console.error("Error saving BMI entry: ", error);
+            }
+        }
+
+        // --- BMI CALCULATION LOGIC ---
+
+        function showMessage(message, isError = true) {
+            errorMessage.textContent = message;
+            errorMessage.className = isError ? 'text-red-600 text-sm mt-2' : 'text-green-600 text-sm mt-2';
+            errorMessage.classList.remove('hidden');
+        }
+
+        function calculateBMI() {
+            const weight = parseFloat(weightInput.value);
+            const heightCm = parseFloat(heightInput.value);
+
+            if (weight <= 0 || heightCm <= 0 || isNaN(weight) || isNaN(heightCm)) {
+                showMessage("Please enter valid positive values for weight and height.");
+                return;
+            }
+            
+            errorMessage.classList.add('hidden'); // Hide error on success
+
+            const heightM = heightCm / 100;
+            const bmi = weight / (heightM * heightM);
+            const roundedBmi = parseFloat(bmi.toFixed(1));
+
+            let category = '';
+            let categoryClass = '';
+
+            if (bmi < 18.5) {
+                category = 'Underweight';
+                categoryClass = 'text-blue-600';
+            } else if (bmi >= 18.5 && bmi <= 24.9) {
+                category = 'Normal Weight';
+                categoryClass = 'text-green-600';
+            } else if (bmi >= 25.0 && bmi <= 29.9) {
+                category = 'Overweight';
+                categoryClass = 'text-yellow-600';
+            } else {
+                category = 'Obese';
+                categoryClass = 'text-red-600';
             }
 
-            function resetCalculator() {
-                // *** LOGIC CHANGE ***
-                // We just hide the result section again.
-                document.getElementById('weight').value = '';
-                document.getElementById('height').value = '';
-                resultSection.classList.add('hidden');
-            }
-        });
+            // Update UI
+            bmiResult.textContent = roundedBmi;
+            bmiCategory.textContent = category;
+            bmiCategory.className = `mt-2 text-2xl font-medium ${categoryClass}`;
+            adviceDiv.innerHTML = getAdvice(category);
+            
+            resultSection.classList.remove('hidden');
+            
+            // Save the result to Firestore
+            saveBmiEntry({
+                bmi: roundedBmi,
+                category: category,
+                date: new Date().toISOString(),
+                weight: weight,
+                height: heightCm
+            });
+        }
+
+        /**
+         * Generates new, styled advice HTML.
+         */
+        function getAdvice(category) {
+            
+            // --- Helper data for advice ---
+            const adviceMap = {
+                'Underweight': {
+                    diet: [
+                        'Focus on nutrient-dense foods: healthy fats (avocado, nuts), lean proteins, and whole grains.',
+                        'Eat 5-6 smaller, balanced meals and healthy snacks throughout the day.',
+                        'Add healthy calories with smoothies, nuts, and seeds.'
+                    ],
+                    exercise: [
+                        'Focus on resistance/strength training 3-4 times a week to build muscle mass.',
+                        'Include moderate cardio, but don\'t overdo it, as it burns many calories.',
+                        'Ensure you are eating enough protein to support muscle repair and growth.'
+                    ]
+                },
+                'Normal Weight': {
+                    diet: [
+                        'Continue a balanced diet rich in fruits, vegetables, lean proteins, and whole grains.',
+                        'Stay hydrated and practice mindful eating, listening to your body\'s hunger cues.',
+                        'Focus on nutrient quality to maintain health and energy levels.'
+                    ],
+                    exercise: [
+                        'Aim for 150 minutes of moderate aerobic activity (brisk walking, swimming) per week.',
+                        'Include muscle-strengthening activities at least 2 days a week.',
+                        'Find activities you enjoy to stay consistent (dancing, hiking, sports).'
+                    ]
+                },
+                'Overweight': {
+                    diet: [
+                        'Focus on portion control and creating a moderate, sustainable calorie deficit.',
+                        'Reduce sugary drinks, processed foods, and refined carbohydrates.',
+                        'Increase fiber intake (vegetables, fruits, legumes) to feel fuller longer.'
+                    ],
+                    exercise: [
+                        'Start with consistent daily activity, like a 30-minute brisk walk.',
+                        'Gradually increase the duration and intensity of aerobic exercise.',
+                        'Incorporate strength training to build muscle, which boosts metabolism.'
+                    ]
+                },
+                'Obese': {
+                    diet: [
+                        'Focus on whole, unprocessed foods like vegetables, fruits, and lean proteins.',
+                        'Work with a professional to establish a safe and sustainable calorie deficit.',
+                        'Reduce sugary drinks, processed snacks, and fast food intake significantly.',
+                    ],
+                    exercise: [
+                        'Start gently with low-impact activities like walking or swimming.',
+                        'Aim for consistency (e.g., 30 minutes, 5 days a week) and gradually increase.',
+                        'Consult a doctor before starting any new, strenuous exercise program.'
+                    ]
+                }
+            };
+            
+            const advice = adviceMap[category] || adviceMap['Normal Weight'];
+
+            // --- SVG Icons ---
+            const dietIcon = `
+                <svg class="w-6 h-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                   <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10.5 11.25h3M10.5 15h3M5.25 7.5l3-4.5 3 4.5M18.75 7.5l-3-4.5-3 4.5" />
+                </svg>
+            `;
+            
+            const exerciseIcon = `
+                <svg class="w-6 h-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A9.005 9.005 0 0112 3c-1.22 0-2.37.26-3.362.714m5.724 0a3 3 0 01-5.724 0m5.724 0A3 3 0 0012 7.5c-1.248 0-2.39.26-3.362.714m5.724 0c1.02.455 1.956.996 2.76 1.6C19.6 11.238 21 12.7 21 14.75c0 2.69-2.21 4.75-4.688 4.75-2.02 0-3.556-1.1-4.312-2.125m0 0c-.756-1.025-2.292-2.125-4.312-2.125C5.21 19.5 3 17.44 3 14.75c0-2.05 1.4-3.512 3.24-4.836C7.044 9.21 8.08 8.705 9.362 8.214m0 0A3 3 0 0112 7.5c1.248 0 2.39.26 3.362.714" />
+                </svg>
+            `;
+            
+            const checkIcon = `
+                <svg class="w-5 h-5 text-green-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+            `;
+
+            // --- Function to generate list items ---
+            const createListItems = (items) => {
+                return items.map(item => `
+                    <div class="flex items-start gap-2">
+                        ${checkIcon}
+                        <span class="text-sm text-gray-700">${item}</span>
+                    </div>
+                `).join('');
+            };
+
+            // --- Final HTML Structure ---
+            let title = `<h3 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Your Action Plan: ${category}</h3>`;
+            
+            let adviceGrid = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Diet Column -->
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div class="flex items-center gap-2 mb-3">
+                            ${dietIcon}
+                            <h4 class="font-semibold text-lg text-green-700">Diet Plan</h4>
+                        </div>
+                        <div class="space-y-2">
+                            ${createListItems(advice.diet)}
+                        </div>
+                    </div>
+                    
+                    <!-- Exercise Column -->
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div class="flex items-center gap-2 mb-3">
+                            ${exerciseIcon}
+                            <h4 class="font-semibold text-lg text-blue-700">Exercise Plan</h4>
+                        </div>
+                        <div class="space-y-2">
+                            ${createListItems(advice.exercise)}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            let general = `
+                <p class="text-xs text-gray-500 mt-6 pt-4 border-t border-gray-200 text-center">
+                    <strong>Disclaimer:</strong> This is a basic guide. Always consult with a healthcare professional or a registered dietitian for a plan specific to your unique health needs.
+                </p>`;
+
+            return title + adviceGrid + general;
+        }
+
+
+        function resetCalculator() {
+            weightInput.value = '';
+            heightInput.value = '';
+            resultSection.classList.add('hidden'); // Hide result
+            errorMessage.classList.add('hidden'); // Hide error
+            bmiResult.textContent = '0.0';
+            bmiCategory.textContent = '';
+            adviceDiv.innerHTML = '';
+        }
+
+        // --- EVENT LISTENERS ---
+        calculateBtn.addEventListener('click', calculateBMI);
+        resetBtn.addEventListener('click', resetCalculator);
+
     </script>
 </body>
 </html>
-```eof
+
+
